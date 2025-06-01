@@ -1,4 +1,6 @@
-pub trait Pixel {
+pub trait Pixel: 'static + Copy + Eq {
+    fn white() -> Self;
+    fn black() -> Self;
     fn to_rgba(&self) -> Rgba;
     fn to_rgb(&self) -> Rgb {
         self.to_rgba().to_rgb()
@@ -9,9 +11,21 @@ pub trait Pixel {
     fn to_bit(&self) -> bool {
         self.to_grey().to_bit()
     }
+    fn r(&self) -> u8 {
+        self.to_rgba().r
+    }
+    fn g(&self) -> u8 {
+        self.to_rgba().g
+    }
+    fn b(&self) -> u8 {
+        self.to_rgba().b
+    }
+    fn a(&self) -> u8 {
+        self.to_rgba().a
+    }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Rgba {
     pub r: u8,
     pub g: u8,
@@ -19,7 +33,7 @@ pub struct Rgba {
     pub a: u8,
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Rgb {
     pub r: u8,
     pub g: u8,
@@ -27,6 +41,22 @@ pub struct Rgb {
 }
 
 impl Pixel for Rgba {
+    fn white() -> Self {
+        Self {
+            r: 0xff,
+            g: 0xff,
+            b: 0xff,
+            a: 0xff,
+        }
+    }
+    fn black() -> Self {
+        Self {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 0xff,
+        }
+    }
     fn to_rgba(&self) -> Rgba {
         *self
     }
@@ -43,6 +73,16 @@ impl Pixel for Rgba {
 }
 
 impl Pixel for Rgb {
+    fn white() -> Self {
+        Self {
+            r: 0xff,
+            g: 0xff,
+            b: 0xff,
+        }
+    }
+    fn black() -> Self {
+        Self { r: 0, g: 0, b: 0 }
+    }
     fn to_rgba(&self) -> Rgba {
         let Rgb { r, g, b } = *self;
         Rgba { r, g, b, a: 0xff }
@@ -60,6 +100,12 @@ impl Pixel for Rgb {
 }
 
 impl Pixel for u8 {
+    fn white() -> Self {
+        0xff
+    }
+    fn black() -> Self {
+        0
+    }
     fn to_rgba(&self) -> Rgba {
         self.to_rgb().to_rgba()
     }
@@ -79,6 +125,12 @@ impl Pixel for u8 {
 }
 
 impl Pixel for bool {
+    fn white() -> Self {
+        false
+    }
+    fn black() -> Self {
+        true
+    }
     fn to_rgba(&self) -> Rgba {
         self.to_rgb().to_rgba()
     }

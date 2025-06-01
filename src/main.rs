@@ -9,13 +9,16 @@ fn main() -> Result<()> {
     const W: usize = 64;
     const H: usize = 48;
     const R: usize = 5;
+
     let predicate = predicate_circle([W / 2, H / 2], R);
-    let mut image = Image::<bool, W, H>::default();
+
+    let mut image = Image::<bool, W, H>::white();
     for y in 0..H {
         for x in 0..W {
             image[[x, y]] = predicate([x, y]);
         }
     }
-    let ppm_p6 = image.to_ppm_p6();
-    stdout().write_all(&ppm_p6)
+
+    let qoi = image.to_qoi();
+    stdout().write_all(&qoi)
 }
