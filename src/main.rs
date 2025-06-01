@@ -1,14 +1,16 @@
-use raytracer::{Image, Scene};
+use raytracer::{Image, Scene, Sphere, Vector};
 use std::io::{Result, Write, stdout};
-use std::rc::Rc;
 
 fn main() -> Result<()> {
     const W: usize = 64;
     const H: usize = 48;
 
     let scene = Scene {
-        props: Rc::new(|[x, y, z]| x * x + y * y + z * z < 25.),
-        camera: [0., 0., -20.],
+        props: vec![Sphere {
+            centre: Vector::new(0., 0., 0.),
+            radius: 5.,
+        }],
+        camera: Vector::new(0., 0., -20.),
         focus: 10.,
     };
 
