@@ -1,21 +1,24 @@
-use raytracer::Image;
+use raytracer::{Image, Scene};
 use std::io::{Result, Write, stdout};
-
-fn predicate_circle(centre: [usize; 2], radius: usize) -> impl Fn([usize; 2]) -> bool {
-    move |[x, y]| x.abs_diff(centre[0]).pow(2) + y.abs_diff(centre[1]).pow(2) <= radius.pow(2)
-}
+use std::rc::Rc;
 
 fn main() -> Result<()> {
     const W: usize = 64;
     const H: usize = 48;
-    const R: usize = 5;
 
-    let predicate = predicate_circle([W / 2, H / 2], R);
+    let scene = Scene {
+        props: Rc::new(|[x, y, z]| x * x + y * y + z * z < 25.),
+        camera: [0., 0., -20.],
+        focus: 10.,
+    };
 
     let mut image = Image::<bool, W, H>::white();
     for y in 0..H {
         for x in 0..W {
-            image[[x, y]] = predicate([x, y]);
+            image[[x, y]] = scene.raycast([
+                (x as isize - W as isize / 2) as f64,
+                (y as isize - H as isize / 2) as f64,
+            ]);
         }
     }
 
