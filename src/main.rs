@@ -6,10 +6,10 @@ fn main() -> Result<()> {
     const H: usize = 48;
 
     let scene = Scene {
-        props: vec![Sphere {
+        props: vec![Box::new(Sphere {
             centre: Vector::new(0., 0., 0.),
             radius: 5.,
-        }],
+        })],
         camera: Vector::new(0., 0., -20.),
         focus: 10.,
     };

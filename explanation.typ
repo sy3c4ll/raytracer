@@ -6,3 +6,5 @@ $ (bold(C) + t bold(d))^2 - r^2 \
 There exists at least one such $t$ iff
 $ D / 4 = (bold(C) dot bold(d))^2 - bold(d)^2 (bold(C)^2 - r^2) \
 = (bold(C) dot bold(d))^2 - bold(C)^2 bold(d)^2 + bold(d)^2 r^2 >= 0 $
+And the frontmost $t$ is
+$ (bold(C) dot bold(d)) - sqrt ((bold(C) dot bold(d))^2 - bold(C)^2 bold(d)^2 + bold(d)^2 r^2)) / bold(d)^2 $

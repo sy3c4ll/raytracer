@@ -89,6 +89,17 @@ impl MulAssign<f64> for Vector {
     }
 }
 
+impl Mul<Vector> for f64 {
+    type Output = Vector;
+    fn mul(self, rhs: Vector) -> Self::Output {
+        Vector {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
+
 impl Mul for Vector {
     type Output = f64;
     fn mul(self, rhs: Self) -> Self::Output {

@@ -1,7 +1,7 @@
-use crate::Vector;
+use crate::{Prop, Vector};
 
 pub struct Scene {
-    pub props: Vec<Sphere>,
+    pub props: Vec<Box<dyn Prop>>,
     pub camera: Vector,
     pub focus: f64,
 }
@@ -21,19 +21,11 @@ impl Scene {
     pub fn clear(&mut self) {
         self.props.clear();
     }
-    pub fn push(&mut self, prop: Sphere) {
-        self.props.push(prop);
+    pub fn push(&mut self, prop: impl Prop) {
+        self.props.push(Box::new(prop));
     }
     pub fn raycast(&self, flat: [f64; 2]) -> bool {
         let ray = Vector::new(flat[0], flat[1], self.focus);
-        let disp = self.camera - self.props[0].centre;
-        (disp * ray).powf(2.) - disp.sq() * ray.sq() + ray.sq() * self.props[0].radius.powf(2.)
-            >= 0.
+        self.props[0].raycast(self.camera, ray).is_some()
     }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct Sphere {
-    pub centre: Vector,
-    pub radius: f64,
 }
