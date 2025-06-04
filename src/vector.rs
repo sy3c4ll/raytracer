@@ -1,4 +1,6 @@
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{
+    Add, AddAssign, BitXor, BitXorAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign,
+};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Vector {
@@ -23,6 +25,9 @@ impl Vector {
     }
     pub fn abs(self) -> f64 {
         self.sq().sqrt()
+    }
+    pub fn norm(self) -> Self {
+        self / self.abs()
     }
 }
 
@@ -97,6 +102,25 @@ impl Mul<Vector> for f64 {
             y: self * rhs.y,
             z: self * rhs.z,
         }
+    }
+}
+
+impl Div<f64> for Vector {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        Self {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+        }
+    }
+}
+
+impl DivAssign<f64> for Vector {
+    fn div_assign(&mut self, rhs: f64) {
+        self.x /= rhs;
+        self.y /= rhs;
+        self.z /= rhs;
     }
 }
 

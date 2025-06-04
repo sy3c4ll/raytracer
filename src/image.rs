@@ -1,5 +1,4 @@
 use crate::{Pixel, Rgb, Rgba};
-use std::any::{Any, TypeId};
 use std::ops::{Index, IndexMut};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -95,15 +94,12 @@ impl<P: Pixel, const W: usize, const H: usize> Image<P, W, H> {
         const QOI_PADDING: [u8; 8] = *b"\0\0\0\0\0\0\0\x01";
         const QOI_PADDING_SIZE: usize = 8;
 
-        let has_alpha = self.type_id() == TypeId::of::<Rgba>();
-
-        let mut buf = Vec::new();
-        buf.reserve(QOI_HEADER_SIZE + W * H * if has_alpha { 5 } else { 4 } + QOI_PADDING_SIZE);
+        let mut buf = Vec::with_capacity(QOI_HEADER_SIZE + W * H * 5 + QOI_PADDING_SIZE);
 
         buf.extend(QOI_MAGIC);
         buf.extend((W as u32).to_be_bytes());
         buf.extend((H as u32).to_be_bytes());
-        buf.push(if has_alpha { 4 } else { 3 });
+        buf.push(4);
         buf.push(1);
 
         let mut index = [Rgba {
@@ -135,7 +131,7 @@ impl<P: Pixel, const W: usize, const H: usize> Image<P, W, H> {
                         buf.push(QOI_OP_INDEX | px_hash);
                     } else {
                         index[px_hash as usize] = px;
-                        if has_alpha && px.a != px_prev.a {
+                        if px.a != px_prev.a {
                             buf.extend([QOI_OP_RGBA, px.r, px.g, px.b, px.a]);
                         } else {
                             let var = Rgb {

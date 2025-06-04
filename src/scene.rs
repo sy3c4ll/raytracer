@@ -1,4 +1,4 @@
-use crate::{Prop, Vector};
+use crate::{Prop, Rgb, Vector};
 
 pub struct Scene {
     pub props: Vec<Box<dyn Prop>>,
@@ -24,8 +24,14 @@ impl Scene {
     pub fn push(&mut self, prop: impl Prop) {
         self.props.push(Box::new(prop));
     }
-    pub fn raycast(&self, flat: [f64; 2]) -> bool {
-        let ray = Vector::new(flat[0], flat[1], self.focus);
-        self.props[0].raycast(self.camera, ray).is_some()
+    pub fn raycast(&self, [x, y]: [usize; 2], [w, h]: [usize; 2]) -> Option<Rgb> {
+        let right = (x as isize - w as isize / 2) as f64;
+        let up = -(y as isize - h as isize / 2) as f64;
+        let ray = right * Self::RIGHT + up * Self::UP + self.focus * Self::FRONT;
+        self.props
+            .iter()
+            .filter_map(|p| Some((p, p.raycast(self.camera, ray)?)))
+            .min_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(p, _d)| p.colour())
     }
 }
