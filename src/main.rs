@@ -2,8 +2,8 @@ use raytracer::{Image, Pixel, Rgb, Scene, Sphere, Vector};
 use std::io::{Result, Write, stdout};
 
 fn main() -> Result<()> {
-    const W: usize = 1024;
-    const H: usize = 768;
+    const W: usize = 64;
+    const H: usize = 48;
 
     let scene = Scene {
         props: vec![
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
             }),
         ],
         camera: Vector::new(0., 0., -20.),
-        focus: 160.,
+        fov: 145.3,
     };
 
     let mut image = Image::<Rgb, W, H>::white();

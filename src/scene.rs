@@ -3,7 +3,8 @@ use crate::{Prop, Rgb, Vector};
 pub struct Scene {
     pub props: Vec<Box<dyn Prop>>,
     pub camera: Vector,
-    pub focus: f64,
+    // Horizontal FoV in degrees
+    pub fov: f64,
 }
 
 impl Scene {
@@ -11,11 +12,11 @@ impl Scene {
     pub const UP: Vector = Vector::new(0., 1., 0.);
     pub const FRONT: Vector = Vector::new(0., 0., 1.);
 
-    pub fn new(camera: Vector, focus: f64) -> Self {
+    pub fn new(camera: Vector, fov: f64) -> Self {
         Self {
             props: Vec::new(),
             camera,
-            focus,
+            fov,
         }
     }
     pub fn clear(&mut self) {
@@ -27,7 +28,8 @@ impl Scene {
     pub fn raycast(&self, [x, y]: [usize; 2], [w, h]: [usize; 2]) -> Option<Rgb> {
         let right = (x as isize - w as isize / 2) as f64;
         let up = -(y as isize - h as isize / 2) as f64;
-        let ray = right * Self::RIGHT + up * Self::UP + self.focus * Self::FRONT;
+        let focus = w as f64 / 2. / (self.fov / 2.).to_radians().tan();
+        let ray = right * Self::RIGHT + up * Self::UP + focus * Self::FRONT;
         self.props
             .iter()
             .filter_map(|p| Some((p, p.raycast(self.camera, ray)?)))
