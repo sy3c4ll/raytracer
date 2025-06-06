@@ -1,7 +1,8 @@
-use crate::{Prop, Rgb, Vector};
+use crate::{Image, Pixel, Prop, Rgb, Vector};
 
 pub struct Scene {
     pub props: Vec<Box<dyn Prop>>,
+    pub bg: Rgb,
     pub camera: Vector,
     // Horizontal FoV in degrees
     pub fov: f64,
@@ -15,6 +16,7 @@ impl Scene {
     pub fn new(camera: Vector, fov: f64) -> Self {
         Self {
             props: Vec::new(),
+            bg: Rgb::white(),
             camera,
             fov,
         }
@@ -35,5 +37,19 @@ impl Scene {
             .filter_map(|p| Some((p, p.raycast(self.camera, ray)?)))
             .min_by(|a, b| a.1.total_cmp(&b.1))
             .map(|(p, _d)| p.colour())
+    }
+    pub fn render<const W: usize, const H: usize>(&self) -> Image<Rgb, W, H> {
+        // The following one-liner is very wasteful with memory and thus has
+        // been scrapped
+        // Image::with_fn(|c| self.raycast(c, [W, H]).unwrap_or(bg))
+        let mut image = Image::with(self.bg);
+        for y in 0..H {
+            for x in 0..W {
+                if let Some(colour) = self.raycast([x, y], [W, H]) {
+                    image[[x, y]] = colour;
+                }
+            }
+        }
+        image
     }
 }

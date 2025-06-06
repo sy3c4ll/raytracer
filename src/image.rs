@@ -1,7 +1,7 @@
 use crate::{Pixel, Rgb, Rgba};
 use std::ops::{Index, IndexMut};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Image<P: Pixel, const W: usize, const H: usize>([[P; W]; H]);
 
 impl<P: Pixel, const W: usize, const H: usize> Index<[usize; 2]> for Image<P, W, H> {
@@ -44,6 +44,12 @@ impl<'a, P: Pixel, const W: usize, const H: usize> IntoIterator for &'a mut Imag
 impl<P: Pixel, const W: usize, const H: usize> Image<P, W, H> {
     pub fn with(px: P) -> Self {
         Self([[px; W]; H])
+    }
+    pub fn with_fn(mut px: impl FnMut([usize; 2]) -> P) -> Self {
+        // This is most elegant, but seems to make an extra copy which here is
+        // hugely expensive
+        use std::array::from_fn;
+        Self(from_fn(|y| from_fn(|x| px([x, y]))))
     }
     pub fn white() -> Self {
         Self::with(P::white())

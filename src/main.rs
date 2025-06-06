@@ -1,14 +1,11 @@
-use raytracer::{Image, Pixel, Rgb, Scene, Sphere, Vector};
+use raytracer::{Pixel, Rgb, Scene, Sphere, Vector};
 use std::io::{Result, Write, stdout};
 
 fn main() -> Result<()> {
-    const W: usize = 64;
-    const H: usize = 48;
-
     let scene = Scene {
         props: vec![
             Box::new(Sphere {
-                centre: Vector::new(-7., 5., -10.),
+                centre: Vector::new(-3., 5., -10.),
                 radius: 5.,
                 colour: Rgb {
                     r: 0xff,
@@ -17,7 +14,7 @@ fn main() -> Result<()> {
                 },
             }),
             Box::new(Sphere {
-                centre: Vector::new(6., 5., 10.),
+                centre: Vector::new(4., 5., 10.),
                 radius: 5.,
                 colour: Rgb {
                     r: 0,
@@ -26,17 +23,10 @@ fn main() -> Result<()> {
                 },
             }),
         ],
+        bg: Rgb::white(),
         camera: Vector::new(0., 0., -20.),
-        fov: 145.3,
+        fov: 120.,
     };
 
-    let mut image = Image::<Rgb, W, H>::white();
-    for y in 0..H {
-        for x in 0..W {
-            image[[x, y]] = scene.raycast([x, y], [W, H]).unwrap_or(Rgb::white());
-        }
-    }
-
-    let qoi = image.to_qoi();
-    stdout().write_all(&qoi)
+    stdout().write_all(&scene.render::<1024, 768>().to_qoi())
 }
