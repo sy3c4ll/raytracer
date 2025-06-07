@@ -28,5 +28,5 @@ fn main() -> Result<()> {
         fov: 120.,
     };
 
-    stdout().write_all(&scene.render::<1024, 768>().to_qoi())
+    stdout().write_all(&scene.render::<7680, 4320>().to_qoi())
 }

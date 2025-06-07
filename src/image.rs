@@ -1,8 +1,9 @@
 use crate::{Pixel, Rgb, Rgba};
+use std::alloc::{Layout, alloc};
 use std::ops::{Index, IndexMut};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Image<P: Pixel, const W: usize, const H: usize>([[P; W]; H]);
+pub struct Image<P: Pixel, const W: usize, const H: usize>(Box<[[P; W]; H]>);
 
 impl<P: Pixel, const W: usize, const H: usize> Index<[usize; 2]> for Image<P, W, H> {
     type Output = P;
@@ -42,20 +43,33 @@ impl<'a, P: Pixel, const W: usize, const H: usize> IntoIterator for &'a mut Imag
 }
 
 impl<P: Pixel, const W: usize, const H: usize> Image<P, W, H> {
-    pub fn with(px: P) -> Self {
-        Self([[px; W]; H])
+    pub fn fill(px: P) -> Self {
+        let layout = Layout::new::<[[P; W]; H]>();
+        let ptr: *mut [[P; W]; H] = unsafe { alloc(layout) }.cast();
+        let buf = unsafe { ptr.as_mut() }.expect("out of memory");
+        for row in buf {
+            for pixel in row {
+                *pixel = px;
+            }
+        }
+        Self(unsafe { Box::from_raw(ptr) })
     }
-    pub fn with_fn(mut px: impl FnMut([usize; 2]) -> P) -> Self {
-        // This is most elegant, but seems to make an extra copy which here is
-        // hugely expensive
-        use std::array::from_fn;
-        Self(from_fn(|y| from_fn(|x| px([x, y]))))
+    pub fn fill_with(mut px: impl FnMut([usize; 2]) -> P) -> Self {
+        let layout = Layout::new::<[[P; W]; H]>();
+        let ptr: *mut [[P; W]; H] = unsafe { alloc(layout) }.cast();
+        let buf = unsafe { ptr.as_mut() }.expect("out of memory");
+        for (y, row) in buf.iter_mut().enumerate() {
+            for (x, pixel) in row.iter_mut().enumerate() {
+                *pixel = px([x, y]);
+            }
+        }
+        Self(unsafe { Box::from_raw(ptr) })
     }
     pub fn white() -> Self {
-        Self::with(P::white())
+        Self::fill(P::white())
     }
     pub fn black() -> Self {
-        Self::with(P::black())
+        Self::fill(P::black())
     }
     pub fn to_pbm_p1(&self) -> Vec<u8> {
         let mut buf = format!("P1\n{W} {H}\n").into_bytes();
