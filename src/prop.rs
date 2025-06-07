@@ -2,7 +2,7 @@ use crate::{Rgb, Vector};
 
 pub trait Prop: 'static {
     fn colour(&self) -> Rgb;
-    fn raycast(&self, camera: Vector, ray: Vector) -> Option<f64>;
+    fn raycast(&self, eye: Vector, ray: Vector) -> Option<f64>;
 }
 
 #[derive(Clone, Copy, Debug)]

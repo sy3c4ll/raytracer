@@ -1,4 +1,4 @@
-use raytracer::{Pixel, Rgb, Scene, Sphere, Vector};
+use raytracer::{Camera, Pixel, Rgb, Scene, Sphere, Vector};
 use std::io::{Result, Write, stdout};
 
 fn main() -> Result<()> {
@@ -24,8 +24,7 @@ fn main() -> Result<()> {
             }),
         ],
         bg: Rgb::white(),
-        camera: Vector::new(0., 0., -20.),
-        fov: 120.,
+        camera: Camera::pz_towards_origin(20., 120.),
     };
 
     stdout().write_all(&scene.render::<7680, 4320>().to_qoi())
