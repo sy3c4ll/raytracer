@@ -1,4 +1,4 @@
-use crate::{Pixel, Rgb, Rgba};
+use crate::pixel::{Pixel, Rgb, Rgba};
 use std::alloc::{Layout, alloc};
 use std::ops::{Index, IndexMut};
 
