@@ -1,3 +1,5 @@
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+
 pub trait Pixel: 'static + Copy + Eq + std::fmt::Debug {
     fn white() -> Self;
     fn black() -> Self;
@@ -235,5 +237,208 @@ impl Pixel for bool {
     }
     fn to_bit(self) -> bool {
         self
+    }
+}
+
+impl Add for Rgba {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            r: self.r.saturating_add(rhs.r),
+            g: self.g.saturating_add(rhs.g),
+            b: self.b.saturating_add(rhs.b),
+            a: self.a.saturating_add(rhs.a),
+        }
+    }
+}
+
+impl AddAssign for Rgba {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl Sub for Rgba {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            r: self.r.saturating_sub(rhs.r),
+            g: self.g.saturating_sub(rhs.g),
+            b: self.b.saturating_sub(rhs.b),
+            a: self.a.saturating_sub(rhs.a),
+        }
+    }
+}
+
+impl SubAssign for Rgba {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
+    }
+}
+
+impl Mul for Rgba {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            r: (self.r as u16 * rhs.r as u16 / 0xff) as u8,
+            g: (self.g as u16 * rhs.g as u16 / 0xff) as u8,
+            b: (self.b as u16 * rhs.b as u16 / 0xff) as u8,
+            a: (self.a as u16 * rhs.a as u16 / 0xff) as u8,
+        }
+    }
+}
+
+impl MulAssign for Rgba {
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = *self * rhs;
+    }
+}
+
+impl Mul<f64> for Rgba {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self {
+            r: (self.r as f64 * rhs) as u8,
+            g: (self.g as f64 * rhs) as u8,
+            b: (self.b as f64 * rhs) as u8,
+            a: (self.a as f64 * rhs) as u8,
+        }
+    }
+}
+
+impl MulAssign<f64> for Rgba {
+    fn mul_assign(&mut self, rhs: f64) {
+        *self = *self * rhs;
+    }
+}
+
+impl Mul<Rgba> for f64 {
+    type Output = Rgba;
+    fn mul(self, rhs: Rgba) -> Self::Output {
+        rhs.mul(self)
+    }
+}
+
+impl Div<f64> for Rgba {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        Self {
+            r: (self.r as f64 / rhs) as u8,
+            g: (self.g as f64 / rhs) as u8,
+            b: (self.b as f64 / rhs) as u8,
+            a: (self.a as f64 / rhs) as u8,
+        }
+    }
+}
+
+impl DivAssign<f64> for Rgba {
+    fn div_assign(&mut self, rhs: f64) {
+        *self = *self / rhs;
+    }
+}
+
+impl Div<Rgba> for f64 {
+    type Output = Rgba;
+    fn div(self, rhs: Rgba) -> Self::Output {
+        rhs / self
+    }
+}
+
+impl Add for Rgb {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            r: self.r.saturating_add(rhs.r),
+            g: self.g.saturating_add(rhs.g),
+            b: self.b.saturating_add(rhs.b),
+        }
+    }
+}
+
+impl AddAssign for Rgb {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl Sub for Rgb {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            r: self.r.saturating_sub(rhs.r),
+            g: self.g.saturating_sub(rhs.g),
+            b: self.b.saturating_sub(rhs.b),
+        }
+    }
+}
+
+impl SubAssign for Rgb {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
+    }
+}
+
+impl Mul for Rgb {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            r: (self.r as u16 * rhs.r as u16 / 0xff) as u8,
+            g: (self.g as u16 * rhs.g as u16 / 0xff) as u8,
+            b: (self.b as u16 * rhs.b as u16 / 0xff) as u8,
+        }
+    }
+}
+
+impl MulAssign for Rgb {
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = *self * rhs;
+    }
+}
+
+impl Mul<f64> for Rgb {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self {
+            r: (self.r as f64 * rhs) as u8,
+            g: (self.g as f64 * rhs) as u8,
+            b: (self.b as f64 * rhs) as u8,
+        }
+    }
+}
+
+impl MulAssign<f64> for Rgb {
+    fn mul_assign(&mut self, rhs: f64) {
+        *self = *self * rhs;
+    }
+}
+
+impl Mul<Rgb> for f64 {
+    type Output = Rgb;
+    fn mul(self, rhs: Rgb) -> Self::Output {
+        rhs.mul(self)
+    }
+}
+
+impl Div<f64> for Rgb {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        Self {
+            r: (self.r as f64 / rhs) as u8,
+            g: (self.g as f64 / rhs) as u8,
+            b: (self.b as f64 / rhs) as u8,
+        }
+    }
+}
+
+impl DivAssign<f64> for Rgb {
+    fn div_assign(&mut self, rhs: f64) {
+        *self = *self / rhs;
+    }
+}
+
+impl Div<Rgb> for f64 {
+    type Output = Rgb;
+    fn div(self, rhs: Rgb) -> Self::Output {
+        rhs / self
     }
 }

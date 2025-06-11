@@ -1,5 +1,5 @@
 use raytracer::pixel::{Pixel, Rgb, Rgba};
-use raytracer::prop::Sphere;
+use raytracer::prop::{Material, Sphere};
 use raytracer::scene::{Camera, Light, Scene};
 use raytracer::vector::Vector;
 use std::io::{Result, Write, stdout};
@@ -10,12 +10,24 @@ fn main() -> Result<()> {
             Box::new(Sphere {
                 centre: Vector::new(-3., 5., -10.),
                 radius: 5.,
-                colour: Rgb::red(),
+                material: Material {
+                    colour: Rgb::red(),
+                    ambient: 0.2,
+                    diffuse: 0.8,
+                    specular: 0.5,
+                    shininess: 32.,
+                },
             }),
             Box::new(Sphere {
                 centre: Vector::new(4., 5., 10.),
                 radius: 5.,
-                colour: Rgb::green(),
+                material: Material {
+                    colour: Rgb::green(),
+                    ambient: 0.2,
+                    diffuse: 0.8,
+                    specular: 0.5,
+                    shininess: 32.,
+                },
             }),
         ],
         light: Light {

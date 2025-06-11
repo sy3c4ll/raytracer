@@ -10,6 +10,33 @@ pub struct Vector {
     pub z: f64,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Ray {
+    pub eye: Vector,
+    pub dir: Vector,
+}
+
+impl Ray {
+    pub const fn new(eye: Vector, dir: Vector) -> Self {
+        Self { eye, dir }
+    }
+    pub const fn from_to(from: Vector, to: Vector) -> Self {
+        Self {
+            eye: from,
+            dir: to.sub(from),
+        }
+    }
+    pub const fn at(&self, t: f64) -> Vector {
+        self.eye.add(self.dir.mul(t))
+    }
+    pub fn distance(&self, t: f64) -> f64 {
+        t * self.dir.abs()
+    }
+    pub fn at_distance(&self, t: f64) -> Vector {
+        self.eye + t * self.dir.norm()
+    }
+}
+
 impl Vector {
     pub const I: Self = Self::new(1., 0., 0.);
     pub const J: Self = Self::new(0., 1., 0.);

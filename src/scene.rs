@@ -1,7 +1,7 @@
 use crate::image::Image;
 use crate::pixel::{Pixel, Rgb};
 use crate::prop::{HitRecord, Prop};
-use crate::vector::Vector;
+use crate::vector::{Ray, Vector};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Light {
@@ -16,6 +16,7 @@ pub struct Camera {
     up: Vector,
     right: Vector,
     pub hfov: f64,
+    unit_focus: f64,
 }
 
 #[derive(Debug)]
@@ -42,39 +43,46 @@ impl Scene {
         self.props.push(Box::new(prop));
     }
     pub fn raycast(&self, [x, y]: [usize; 2], [w, h]: [usize; 2]) -> Option<Rgb> {
-        let focus = w as f64 / 2. / (self.camera.hfov / 2.).to_radians().tan();
+        let focus = self.camera.focus(w);
         let xproj = (x as isize - w as isize / 2) as f64;
         let yproj = -(y as isize - h as isize / 2) as f64;
 
-        let ray =
-            focus * self.camera.centre() + xproj * self.camera.right() + yproj * self.camera.up();
+        let ray = Ray {
+            eye: self.camera.eye,
+            dir: focus * self.camera.centre()
+                + xproj * self.camera.right()
+                + yproj * self.camera.up(),
+        };
 
         self.props
             .iter()
-            .filter_map(|p| p.raycast(self.camera.eye, ray, self.eps))
+            .filter_map(|p| p.raycast(ray, self.eps))
             .min_by(|a, b| a.distance.total_cmp(&b.distance))
             .map(|h| self.shade(h))
     }
     pub fn shade(&self, hit: HitRecord) -> Rgb {
         let disp = self.light.position - hit.position;
         let occluded = self.props.iter().any(|p| {
-            p.raycast(hit.position, disp, self.eps)
+            p.raycast(Ray::new(hit.position, disp), self.eps)
                 .is_some_and(|h| h.distance - disp.abs() <= -self.eps)
         });
-        let attenuation = if occluded {
-            0.
+
+        let ambient = hit.material.ambient * hit.material.colour * self.light.colour;
+
+        if occluded {
+            ambient
         } else {
-            (disp.norm() * hit.normal.norm()).max(0.)
-        };
-        let shaded_colour = Rgb {
-            r: (hit.colour.r as u16 * self.light.colour.r as u16 / 0xff) as u8,
-            g: (hit.colour.g as u16 * self.light.colour.g as u16 / 0xff) as u8,
-            b: (hit.colour.b as u16 * self.light.colour.b as u16 / 0xff) as u8,
-        };
-        Rgb {
-            r: (shaded_colour.r as f64 * attenuation) as u8,
-            g: (shaded_colour.g as f64 * attenuation) as u8,
-            b: (shaded_colour.b as f64 * attenuation) as u8,
+            let l = disp.norm();
+            let cos_d = l * hit.normal;
+            let diffuse = hit.material.diffuse * cos_d.max(0.) * hit.material.colour;
+
+            let r = 2. * cos_d * hit.normal - l;
+            let cos_s = r * -hit.ray.dir.norm();
+            let specular = hit.material.specular
+                * cos_s.max(0.).powf(hit.material.shininess)
+                * self.light.colour;
+
+            ambient + diffuse + specular
         }
     }
     pub fn render<P: Pixel, const W: usize, const H: usize>(
@@ -112,6 +120,9 @@ impl Camera {
     pub const fn right(&self) -> Vector {
         self.right
     }
+    pub const fn focus(&self, w: usize) -> f64 {
+        w as f64 * self.unit_focus
+    }
     pub fn new(eye: Vector, centre: Vector, up: Vector, hfov: f64) -> Self {
         let centre = centre.norm();
         let up = up.norm();
@@ -123,21 +134,23 @@ impl Camera {
             up,
             right,
             hfov,
+            unit_focus: 0.5 / (hfov / 2.).to_radians().tan(),
         }
     }
-    pub const fn px_towards_origin(dist: f64, hfov: f64) -> Self {
+    pub fn px_towards_origin(dist: f64, hfov: f64) -> Self {
         const CENTRE: Vector = Vector::I;
         const UP: Vector = Vector::J;
         const RIGHT: Vector = UP.cross(CENTRE);
         Self {
             eye: Vector::new(-dist, 0., 0.),
-            hfov,
             up: UP,
             centre: CENTRE,
             right: RIGHT,
+            hfov,
+            unit_focus: 0.5 / (hfov / 2.).to_radians().tan(),
         }
     }
-    pub const fn py_towards_origin(dist: f64, hfov: f64) -> Self {
+    pub fn py_towards_origin(dist: f64, hfov: f64) -> Self {
         const CENTRE: Vector = Vector::J;
         const UP: Vector = Vector::K.neg();
         const RIGHT: Vector = UP.cross(CENTRE);
@@ -147,9 +160,10 @@ impl Camera {
             up: UP,
             right: RIGHT,
             hfov,
+            unit_focus: 0.5 / (hfov / 2.).to_radians().tan(),
         }
     }
-    pub const fn pz_towards_origin(dist: f64, hfov: f64) -> Self {
+    pub fn pz_towards_origin(dist: f64, hfov: f64) -> Self {
         const CENTRE: Vector = Vector::K;
         const UP: Vector = Vector::J;
         const RIGHT: Vector = UP.cross(CENTRE);
@@ -159,9 +173,10 @@ impl Camera {
             up: UP,
             right: RIGHT,
             hfov,
+            unit_focus: 0.5 / (hfov / 2.).to_radians().tan(),
         }
     }
-    pub const fn nx_towards_origin(dist: f64, hfov: f64) -> Self {
+    pub fn nx_towards_origin(dist: f64, hfov: f64) -> Self {
         const CENTRE: Vector = Vector::I.neg();
         const UP: Vector = Vector::J;
         const RIGHT: Vector = UP.cross(CENTRE);
@@ -171,9 +186,10 @@ impl Camera {
             up: UP,
             right: RIGHT,
             hfov,
+            unit_focus: 0.5 / (hfov / 2.).to_radians().tan(),
         }
     }
-    pub const fn ny_towards_origin(dist: f64, hfov: f64) -> Self {
+    pub fn ny_towards_origin(dist: f64, hfov: f64) -> Self {
         const CENTRE: Vector = Vector::J.neg();
         const UP: Vector = Vector::K;
         const RIGHT: Vector = UP.cross(CENTRE);
@@ -183,9 +199,10 @@ impl Camera {
             up: UP,
             right: RIGHT,
             hfov,
+            unit_focus: 0.5 / (hfov / 2.).to_radians().tan(),
         }
     }
-    pub const fn nz_towards_origin(dist: f64, hfov: f64) -> Self {
+    pub fn nz_towards_origin(dist: f64, hfov: f64) -> Self {
         const CENTRE: Vector = Vector::K.neg();
         const UP: Vector = Vector::J;
         const RIGHT: Vector = UP.cross(CENTRE);
@@ -195,6 +212,7 @@ impl Camera {
             up: UP,
             right: RIGHT,
             hfov,
+            unit_focus: 0.5 / (hfov / 2.).to_radians().tan(),
         }
     }
 }

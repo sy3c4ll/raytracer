@@ -1,53 +1,65 @@
 use crate::pixel::Rgb;
-use crate::vector::Vector;
+use crate::vector::{Ray, Vector};
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Material {
+    pub colour: Rgb,
+    pub ambient: f64,
+    pub diffuse: f64,
+    pub specular: f64,
+    pub shininess: f64,
+}
 
 #[derive(Clone, Debug)]
 pub struct HitRecord<'a> {
     pub prop: &'a dyn Prop,
+    pub ray: Ray,
     pub distance: f64,
     pub position: Vector,
     pub normal: Vector,
-    pub colour: Rgb,
+    pub material: Material,
 }
 
 pub trait Prop: 'static + std::fmt::Debug {
-    fn raycast(&self, eye: Vector, ray: Vector, eps: f64) -> Option<HitRecord>;
+    fn raycast(&self, ray: Ray, eps: f64) -> Option<HitRecord>;
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Sphere {
     pub centre: Vector,
     pub radius: f64,
-    pub colour: Rgb,
+    pub material: Material,
 }
 
 impl Prop for Sphere {
-    fn raycast(&self, eye: Vector, ray: Vector, eps: f64) -> Option<HitRecord> {
+    fn raycast(&self, ray: Ray, eps: f64) -> Option<HitRecord> {
         #[inline]
         const fn sq(f: f64) -> f64 {
             f * f
         }
 
-        let disp = eye - self.centre;
-        let d4 = sq(disp * ray) - disp.sq() * ray.sq() + ray.sq() * sq(self.radius);
+        let disp = ray.eye - self.centre;
+        let d4 = sq(disp * ray.dir) - disp.sq() * ray.dir.sq() + ray.dir.sq() * sq(self.radius);
         if d4 >= 0. {
-            let t1 = (-disp * ray - d4.sqrt()) / ray.sq();
-            let t2 = (-disp * ray + d4.sqrt()) / ray.sq();
+            let t1 = (-disp * ray.dir - d4.sqrt()) / ray.dir.sq();
+            let t2 = (-disp * ray.dir + d4.sqrt()) / ray.dir.sq();
             if t1 >= eps {
                 Some(HitRecord {
                     prop: self,
-                    distance: t1 * ray.abs(),
-                    position: eye + t1 * ray,
-                    normal: eye + t1 * ray - self.centre,
-                    colour: self.colour,
+                    ray,
+                    distance: ray.distance(t1),
+                    position: ray.at(t1),
+                    normal: (ray.at(t1) - self.centre) / self.radius,
+                    material: self.material,
                 })
             } else if t2 >= eps {
                 Some(HitRecord {
                     prop: self,
-                    distance: t2 * ray.abs(),
-                    position: eye + t2 * ray,
-                    normal: eye + t2 * ray - self.centre,
-                    colour: self.colour,
+                    ray,
+                    distance: ray.distance(t2),
+                    position: ray.at(t2),
+                    normal: (ray.at(t2) - self.centre) / self.radius,
+                    material: self.material,
                 })
             } else {
                 None
